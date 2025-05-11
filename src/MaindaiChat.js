@@ -5,78 +5,108 @@ const API_URL = process.env.REACT_APP_API_URL;
 const SALA_ID = process.env.REACT_APP_SALA_ID;
 const API_KEY = process.env.REACT_APP_API_KEY;
 
-export default function MaindChatPOC() {
-  const [messages, setMessages] = useState([]);
-  const [input, setInput] = useState("");
+export default function MaindaiChatPOC() {
+	const [messages, setMessages] = useState([]);
+	const [input, setInput] = useState("");
 
-  useEffect(() => {
-    async function carregarMensagens() {
-      try {
-        const res = await fetch(`${API_URL}/salas/${SALA_ID}/mensagens`, {
-          headers: {
-            "x-api-key": API_KEY
-          }
-        });
-        const data = await res.json();
-        console.log("Mensagens carregadas:", data);
-        setMessages(Array.isArray(data) ? data : []); // segurança
-      } catch (err) {
-        console.error("Erro ao carregar mensagens:", err);
-      }
-    }
+	useEffect(() => {
+		async function carregarMensagens() {
+			try {
+				const res = await fetch(
+					`${API_URL}/salas/${SALA_ID}/mensagens`,
+					{
+						headers: { "x-api-key": API_KEY },
+					}
+				);
+				const data = await res.json();
+				setMessages(Array.isArray(data) ? data : []);
+			} catch (err) {
+				console.error("Erro ao carregar mensagens:", err);
+			}
+		}
+		carregarMensagens();
+	}, []);
 
-    carregarMensagens();
-  }, []);
+	const sendMessage = async () => {
+		if (!input.trim()) return;
 
-  const sendMessage = async () => {
-    if (!input.trim()) return;
+		let raw;
+		try {
+			raw = JSON.parse(input);
+		} catch (e) {
+			alert("JSON inválido! Verifique a sintaxe.");
+			return;
+		}
 
-    const novaMensagem = {
-      usuario: "Humano",
-      texto: input.trim(),
-    };
+		const { userKey, mensagem } = raw;
+		if (!userKey || !mensagem) {
+			alert('JSON deve conter "userKey" e "mensagem".');
+			return;
+		}
 
-    try {
-      const res = await fetch(`${API_URL}/salas/${SALA_ID}/mensagens`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": API_KEY
-        },
-        body: JSON.stringify(novaMensagem)
-      });
+		// transforma para o formato esperado pelo backend
+		const body = {
+			userKey: userKey,
+			mensagem: mensagem.trim(),
+		};
 
-      const resposta = await res.json();
-      setMessages((mensagens) => [...mensagens, resposta]);
-      setInput("");
-    } catch (err) {
-      console.error("Erro ao enviar mensagem:", err);
-    }
-  };
+    console.log(body);
+		try {
+			const res = await fetch(`${API_URL}/salas/${SALA_ID}/mensagens`, {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+					"x-api-key": API_KEY,
+				},
+				body: JSON.stringify(body),
+			});
+			if (!res.ok) throw new Error("Falha no envio");
+			const nova = await res.json();
+			setMessages((msgs) => [...msgs, nova]);
+			setInput("");
+		} catch (err) {
+			console.error("Erro ao enviar mensagem:", err);
+			alert("Não foi possível enviar a mensagem.");
+		}
+	};
 
-  return (
-    <div className="chat-container">
-      <h1>Maind.ai - Sala de Diálogo</h1>
+	return (
+		<div className="app-container">
+			<div className="input-pane">
+				<h2>Nova Mensagem (JSON)</h2>
+				<textarea
+					wrap="off"
+					value={input}
+					onChange={(e) => setInput(e.target.value)}
+					placeholder={`{\n  "mensagem": "texto aqui",\n  "userKey": "sua_chave_aqui"\n}`}
+					style={{
+						flex: 1,
+						width: "100%",
+						height: "100%",
+						resize: "both",
+						backgroundColor: "#2c2c2c",
+						color: "#fff",
+						overflow: "auto",
+						whiteSpace: "pre",
+						overflowWrap: "normal",
+						wordWrap: "normal",
+						wordBreak: "normal",
+					}}
+				/>
+				<button onClick={sendMessage}>Enviar</button>
+			</div>
 
-      <div className="messages">
-        {messages.map((msg, idx) => (
-          <div key={idx} className="message">
-            <strong>{msg.usuario}:</strong>
-            <span>{msg.texto}</span>
-          </div>
-        ))}
-      </div>
-
-      <div className="input-area">
-        <input
-          type="text"
-          placeholder="Digite uma mensagem como um Maind..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && sendMessage()}
-        />
-        <button onClick={sendMessage}>Enviar</button>
-      </div>
-    </div>
-  );
+			<div className="chat-container" style={{ margin: "0 auto" }}>
+				<h1>Maind.ai - Sala de Diálogo</h1>
+				<div className="messages">
+					{messages.map((msg, idx) => (
+						<div key={idx} className="message">
+							<strong>{msg.autor}:</strong>
+							<span>{msg.texto}</span>
+						</div>
+					))}
+				</div>
+			</div>
+		</div>
+	);
 }
