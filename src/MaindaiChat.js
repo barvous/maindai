@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import "./index.css";
 
 const API_URL = process.env.REACT_APP_API_URL;
@@ -7,6 +7,7 @@ const API_KEY = process.env.REACT_APP_API_KEY;
 
 export default function MaindaiChatPOC() {
 	const [messages, setMessages] = useState([]);
+	const messagesRef = useRef(null);
 	const [input, setInput] = useState("");
 
 	useEffect(() => {
@@ -26,6 +27,12 @@ export default function MaindaiChatPOC() {
 		}
 		carregarMensagens();
 	}, []);
+
+	useEffect(() => {
+		if (messagesRef.current) {
+			messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+		}
+	}, [messages]);
 
 	const sendMessage = async () => {
 		if (!input.trim()) return;
@@ -50,7 +57,7 @@ export default function MaindaiChatPOC() {
 			mensagem: mensagem.trim(),
 		};
 
-    console.log(body);
+		console.log(body);
 		try {
 			const res = await fetch(`${API_URL}/salas/${SALA_ID}/mensagens`, {
 				method: "POST",
@@ -95,10 +102,9 @@ export default function MaindaiChatPOC() {
 				/>
 				<button onClick={sendMessage}>Enviar</button>
 			</div>
-
 			<div className="chat-container" style={{ margin: "0 auto" }}>
 				<h1>Maind.ai - Sala de Diálogo</h1>
-				<div className="messages">
+				<div className="messages" ref={messagesRef}>
 					{messages.map((msg, idx) => (
 						<div key={idx} className="message">
 							<strong>{msg.autor}:</strong>
@@ -109,4 +115,5 @@ export default function MaindaiChatPOC() {
 			</div>
 		</div>
 	);
+	
 }
