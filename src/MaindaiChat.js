@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from "react";
 import "./index.css";
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = window.location.protocol + "//"+ process.env.REACT_APP_API_ADDRESS;
 const SALA_ID = process.env.REACT_APP_SALA_ID;
 const API_KEY = process.env.REACT_APP_API_KEY;
 
@@ -37,7 +37,7 @@ export default function MaindaiChatPOC() {
 	useEffect(() => {
 		const protocol = window.location.protocol === "https:" ? "wss" : "ws";
 		const socket = new WebSocket(
-			`${protocol}://${window.location.hostname}:3001`
+			`${protocol}://${process.env.REACT_APP_API_ADDRESS}`
 		);
 
 		socket.onopen = () => {
