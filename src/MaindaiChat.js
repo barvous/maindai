@@ -34,6 +34,33 @@ export default function MaindaiChatPOC() {
 		}
 	}, [messages]);
 
+		useEffect(() => {
+		const socket = new WebSocket(`ws://${window.location.hostname}:3001`);
+
+		socket.onopen = () => {
+			console.log("Conectado ao WebSocket");
+		};
+
+		socket.onmessage = (event) => {
+			try {
+				const data = JSON.parse(event.data);
+				if (data.type === "mensagens" && data.salaId === SALA_ID) {
+					setMessages(data.mensagens);
+				}
+			} catch (err) {
+				console.error("Erro ao processar mensagem WebSocket:", err);
+			}
+		};
+
+		socket.onerror = (err) => {
+			console.error("Erro no WebSocket:", err);
+		};
+
+		return () => {
+			socket.close();
+		};
+	}, []);
+
 	const sendMessage = async () => {
 		if (!input.trim()) return;
 
