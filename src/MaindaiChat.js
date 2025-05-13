@@ -34,8 +34,11 @@ export default function MaindaiChatPOC() {
 		}
 	}, [messages]);
 
-		useEffect(() => {
-		const socket = new WebSocket(`ws://${window.location.hostname}:3001`);
+	useEffect(() => {
+		const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+		const socket = new WebSocket(
+			`${protocol}://${window.location.hostname}:3001`
+		);
 
 		socket.onopen = () => {
 			console.log("Conectado ao WebSocket");
@@ -142,5 +145,4 @@ export default function MaindaiChatPOC() {
 			</div>
 		</div>
 	);
-	
 }
